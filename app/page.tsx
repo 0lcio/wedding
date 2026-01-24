@@ -1,65 +1,98 @@
+"use client";
+
+import { useRef } from "react";
 import Image from "next/image";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import RingSequence from "./components/RingSequence";
+import PaperSheet from "./components/PaperSheet";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const paperRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: containerRef.current,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1, 
+      },
+
+    });
+    tl.to(paperRef.current, {
+      y: -400, 
+      ease: "none",
+    });
+
+  }, { scope: containerRef });
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main ref={containerRef} className="h-[200vh] w-full bg-[#EBE9E4] relative">
+      <div className="fixed top-0 left-0 w-full h-screen flex flex-col items-center justify-end pb-0 overflow-hidden">
+        
+        {/* RING */}
+        <div className="absolute top-10 md:top-20 w-[200px] h-[200px] md:w-[250px] md:h-[250px] z-40 pointer-events-none">
+          <RingSequence />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <div className="relative w-full max-w-[350px] md:max-w-xl translate-y-[15%] transition-transform duration-300">
+          
+          {/* 1. Back-Envelope (z-10) */}
+          <div className="relative z-10 w-full">
+             <Image
+              src="/bustaAperta1.svg"
+              alt="Interno Busta"
+              width={800}
+              height={500}
+              className="w-full h-auto"
+              priority
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          {/* 2. Invite (z-20) */}
+          <div 
+            ref={paperRef}
+            className="absolute left-1/2 -translate-x-1/2 w-[90%] z-20 top-[2%]" 
           >
-            Documentation
-          </a>
+            <PaperSheet className="w-full pb-20 shadow-sm">
+              <p className="font-sans text-[10px] tracking-[0.3em] text-stone-400 uppercase mb-4 mt-2">
+                Save the Date
+              </p>
+              <h1 className="font-serif text-4xl md:text-5xl text-stone-900 mb-4 leading-none uppercase tracking-widest">
+                Name <br/> <span className="text-2xl text-stone-400">&</span> Name2
+              </h1>
+              <div className="w-8 h-[1px] bg-stone-300 my-6 mx-auto"></div>
+              <div className="font-serif text-sm md:text-base space-y-1 uppercase tracking-[0.15em] text-stone-600">
+                <p>DATE</p>
+                <p className="text-[10px] text-stone-400 lowercase italic">HH</p>
+                <p className="pt-6 font-bold text-stone-800">PLACE</p>
+                <p className="text-[10px]">CITY</p>
+              </div>
+              <button className="mt-8 px-6 py-2 border border-stone-800 text-stone-800 font-sans text-[10px] tracking-widest uppercase hover:bg-stone-800 hover:text-white transition-colors">
+                RSVP
+              </button>
+            </PaperSheet>
+          </div>
+
+          {/* 3. Front-Envelope (z-30) */}
+          <div className="absolute bottom-0 left-0 w-full z-30 pointer-events-none">
+             <Image
+              src="/bustaAperta2.svg"
+              alt="Fronte Busta"
+              width={800}
+              height={500}
+              className="w-full h-auto"
+              priority
+            />
+          </div>
+
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
