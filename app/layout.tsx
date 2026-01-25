@@ -3,6 +3,9 @@ import { Amiri, Cormorant_Garamond, Montserrat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
 
+const NameBride = process.env.NEXT_PUBLIC_NAME_BRIDE;
+const NameGroom = process.env.NEXT_PUBLIC_NAME_GROOM;
+
 const serifFont = Amiri({ 
   weight: ["400", "700"],
   subsets: ["latin"],
@@ -21,8 +24,11 @@ const sansFont = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Name & Name",
-  description: "Our Wedding Invitation Website",
+  title: `${NameBride} & ${NameGroom}`,
+  description: "Wedding RSVP",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
