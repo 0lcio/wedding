@@ -123,3 +123,37 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Nasconde la scrollbar per Chrome, Safari e Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Nasconde la scrollbar per IE, Edge e Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .hide-video-controls::-webkit-media-controls {
+    display: none !important;
+  }
+  .hide-video-controls::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+}
+
+/* Se vuoi applicarlo a TUTTA la pagina di default (consigliato per il tuo caso) */
+@layer base {
+  html::-webkit-scrollbar, 
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
+  html, 
+  body {
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}

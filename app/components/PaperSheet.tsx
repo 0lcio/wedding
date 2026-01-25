@@ -40,7 +40,7 @@ export default function PaperSheet({
       <div
         className="absolute inset-0 opacity-[0.7] pointer-events-none"
         style={{
-          backgroundImage: `url("/paper-texture.jpg")`,
+          backgroundImage: `url("/paper-texture.webp")`,
           backgroundSize: "cover", 
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat", 

@@ -44,12 +44,10 @@ import {
 const formSchema = z.object({
   firstName: z.string().min(2, "Il nome è obbligatorio"),
   lastName: z.string().min(2, "Il cognome è obbligatorio"),
-  isAttending: z.enum(["yes", "no"], {
-    required_error: "Dicci se ci sarai o no!",
-  }),
+  isAttending: z.enum(["yes", "no"]),
   guests: z.string().optional(),
   intolerances: z.string().optional(),
-  needsHotel: z.boolean().default(false),
+  needsHotel: z.boolean().optional(),
   notes: z.string().optional(),
 });
 

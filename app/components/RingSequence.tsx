@@ -1,91 +1,96 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
+import { useRef, useEffect, useState } from "react";
+import Image from "next/image"; // Importiamo Image per il fallback
 
-export default function RingSequence() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-  
-  const frameCount = 96; 
-  const folder = "/frames/"; 
-  
-  const imagesRef = useRef<HTMLImageElement[]>([]);
-  const renderLoop = useRef<gsap.core.Tween | null>(null);
+interface RingSequenceProps {
+  onLoaded?: () => void;
+}
+
+export default function RingSequence({ onLoaded }: RingSequenceProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [useFallback, setUseFallback] = useState(false); // Stato per attivare la GIF/WebP
 
   useEffect(() => {
-    const loadImages = async () => {
-      const promises = [];
-      const loadedImages: HTMLImageElement[] = [];
+    const video = videoRef.current;
+    
+    // Se siamo già in modalità fallback, non fare nulla col video
+    if (useFallback) {
+      if (onLoaded) onLoaded();
+      return;
+    }
 
-      for (let i = 0; i < frameCount; i++) {
-        // Formatta il numero: 0 -> "000", 15 -> "015"
-        const index = i.toString().padStart(3, "0");
-        const src = `${folder}frame_${index}.webp`;
+    if (!video) return;
 
-        const img = new Image();
-        img.src = src;
-        
-        const promise = new Promise<void>((resolve) => {
-          img.onload = () => resolve();
-        });
-
-        promises.push(promise);
-        loadedImages.push(img);
+    // Funzione robusta per tentare il play
+    const tryPlay = async () => {
+      try {
+        // Proviamo a far partire il video
+        await video.play();
+        // Se arriviamo qui, il video sta andando -> Tutto ok
+      } catch (err) {
+        console.log("Autoplay bloccato (Low Power Mode?), passo al fallback.", err);
+        // Se il browser blocca (errore), attiviamo il fallback
+        setUseFallback(true);
+        // Notifichiamo comunque che è "carico" per non bloccare il sito
+        if (onLoaded) onLoaded();
       }
-
-      await Promise.all(promises);
-      imagesRef.current = loadedImages;
-      setImagesLoaded(true);
     };
 
-    loadImages();
+    tryPlay();
+
+    // Listener per quando il video è pronto (se non va in errore)
+    const handleCanPlay = () => {
+      if (onLoaded && !useFallback) onLoaded();
+    };
+
+    video.addEventListener("canplaythrough", handleCanPlay);
+    
+    // Controllo cache
+    if (video.readyState >= 3 && !useFallback) {
+      if (onLoaded) onLoaded();
+    }
 
     return () => {
-      if (renderLoop.current) renderLoop.current.kill();
+      video.removeEventListener("canplaythrough", handleCanPlay);
     };
-  }, []);
+  }, [onLoaded, useFallback]);
 
-  useEffect(() => {
-    if (!imagesLoaded || !canvasRef.current) return;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // --- RENDER DEL FALLBACK (Animated WebP) ---
+  if (useFallback) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <Image
+          src="/ring-fallback.webp" // Il file che hai creato con FFmpeg
+          alt="Ring Animation"
+          width={600}
+          height={600}
+          className="w-full h-full object-contain"
+          priority // Caricalo subito
+          unoptimized // Importante per le WebP animate su Next.js a volte
+        />
+      </div>
+    );
+  }
 
-    canvas.width = imagesRef.current[0].width;
-    canvas.height = imagesRef.current[0].height;
-
-    const frameObj = { val: 0 };
-
-    renderLoop.current = gsap.to(frameObj, {
-      val: frameCount - 1,
-      duration: 3,         
-      repeat: -1,      
-      ease: "none",        
-      onUpdate: () => {
-
-        const frameIndex = Math.round(frameObj.val);
-        const img = imagesRef.current[frameIndex];
-        
-        if (img) {
-
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0);
-        }
-      },
-    });
-
-  }, [imagesLoaded]);
-
+  // --- RENDER DEL VIDEO (Default) ---
   return (
-    <div className="flex items-center justify-center w-full h-full">
-      {!imagesLoaded && <p className="text-gray-400 animate-pulse"></p>}
-      
-      <canvas 
-        ref={canvasRef} 
-        className={`max-w-full max-h-full object-contain ${imagesLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
-      />
+    <div className="w-full h-full flex items-center justify-center">
+      <video
+        ref={videoRef}
+        className="w-full h-full object-contain hide-video-controls"
+        muted
+        loop
+        playsInline
+        width={600}
+        height={600}
+        // Poster: mostriamo il primo frame statico mentre carica o se il video ritarda
+        poster="/frames/frame_000.webp" 
+      >
+        <source src="/ring-safari.mov" />
+        <source src="/ring-chrome.webm" type="video/webm" />
+      </video>
     </div>
   );
 }
