@@ -80,7 +80,7 @@ export default function RingSequence() {
 
   return (
     <div className="flex items-center justify-center w-full h-full">
-      {!imagesLoaded && <p className="text-gray-400 animate-pulse">Caricamento anello...</p>}
+      {!imagesLoaded && <p className="text-gray-400 animate-pulse"></p>}
       
       <canvas 
         ref={canvasRef} 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Amiri, Cormorant_Garamond, Montserrat } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner"
 
 const serifFont = Amiri({ 
   weight: ["400", "700"],
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="it">
       <body className={`${serifFont.variable} ${garamondFont.variable} ${sansFont.variable} antialiased bg-[#f2f0e9]`}>
         {children}
+        <Toaster richColors theme="light"/>
       </body>
     </html>
   );
