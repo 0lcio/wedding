@@ -13,41 +13,57 @@ export async function POST(req: Request) {
     const rsvpSheetUrl = process.env.GOOGLE_SHEET_URL;
     const telemetrySheetUrl = process.env.GOOGLE_SHEET_TELEMETRY_URL;
 
-    let ip = "Sconosciuto";
     const headersToCheck = [
-        "x-forwarded-for",  
-        "x-real-ip",          
-        "cf-connecting-ip",   
-        "true-client-ip",     
-        "x-client-ip",        
-        "fastly-client-ip",   
-        "forwarded"           
+        "x-forwarded-for",
+        "x-real-ip",
+        "cf-connecting-ip",
+        "true-client-ip",
+        "x-client-ip",
+        "forwarded",
+        "x-cluster-client-ip",
+        "fastly-client-ip"
     ];
+
+    let allIpsLog = ""; 
+    let candidateIpForGeo: string | undefined = undefined; 
+
     headersToCheck.forEach(header => {
         const val = req.headers.get(header);
-        if (val) console.log(`${header}: ${val}`);
-        if (val && ip === "Sconosciuto") {
-            ip = val.split(",")[0].trim();
+        if (val) {
+            allIpsLog += `${header}: ${val} || `;
         }
     });
 
-    if (ip.includes("::ffff:")) ip = ip.replace("::ffff:", "");
-    if (ip.includes(":")) {
-         const parts = ip.split(":");
-         if (parts.length === 2 && parts[1].length <= 5) {
-             ip = parts[0];
-         }
+    if (!allIpsLog) allIpsLog = "Nessun Header IP trovato (probabile localhost o proxy nascosto)";
+
+    const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
+    const foundIps = allIpsLog.match(ipRegex) || [];
+
+    for (const ip of foundIps) {
+        if (!ip.startsWith("10.") && 
+            !ip.startsWith("192.168.") && 
+            !ip.startsWith("127.") && 
+            !ip.startsWith("172.")) {
+            candidateIpForGeo = ip;
+            break; 
+        }
+    }
+
+    if (!candidateIpForGeo && foundIps.length > 0) {
+        const firstIp = foundIps[0];
+        if (firstIp) {
+            candidateIpForGeo = firstIp;
+        }
     }
 
     let geo = "Sconosciuta";
-    const isPublicIP = ip !== "Sconosciuto" && !ip.startsWith("127.") && !ip.startsWith("192.168.") && !ip.startsWith("10.") && ip !== "::1";
-
-    if (isPublicIP) {
+    
+    if (candidateIpForGeo && candidateIpForGeo !== "127.0.0.1") {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
 
-            const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city,isp`, {
+            const geoRes = await fetch(`http://ip-api.com/json/${candidateIpForGeo}?fields=status,country,city,isp`, {
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
@@ -59,9 +75,8 @@ export async function POST(req: Request) {
                 }
             }
         } catch (e) {
-            console.error("Geo lookup fallito, provo fallback...");
-            try {
-                 const backupRes = await fetch(`https://ipapi.co/${ip}/json/`);
+             try {
+                 const backupRes = await fetch(`https://ipapi.co/${candidateIpForGeo}/json/`);
                  if(backupRes.ok) {
                      const backupData = await backupRes.json();
                      if (backupData.city) {
@@ -71,12 +86,13 @@ export async function POST(req: Request) {
             } catch (errBackup) {}
         }
     }
+
     const tasks = [];
 
     if (rsvpSheetUrl) {
         const rsvpPayload = {
             ...rsvpData,
-            deviceInfo: { ip, city: geo }
+            deviceInfo: { ip: allIpsLog, city: geo } 
         };
         tasks.push(
             fetch(rsvpSheetUrl, {
@@ -91,7 +107,7 @@ export async function POST(req: Request) {
         const telemetryPayload = {
             rsvpData: rsvpData,
             telemetry: telemetryData,
-            ip: ip,
+            ip: allIpsLog,
             geo: geo
         };
         tasks.push(
