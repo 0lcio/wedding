@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const rsvpSheetUrl = process.env.GOOGLE_SHEET_URL;
     const telemetrySheetUrl = process.env.GOOGLE_SHEET_TELEMETRY_URL;
 
-    let ip = req.headers.get("x-forwarded-for") || "Sconosciuto";
+    let ip = req.headers.get("x-client-ip") || "Sconosciuto";
     if (ip.includes(",")) ip = ip.split(",")[0];
 
     let geo = "Sconosciuta";
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
             if (geoData.status === "success") {
                 geo = `${geoData.city}, ${geoData.country} (${geoData.isp})`;
             }
-        } catch (e) { console.error("Errore Geo:", e); }
+        } catch (e) { }
     }
 
     const tasks = [];
