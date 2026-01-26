@@ -41,6 +41,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { collectTelemetry } from "@/lib/telemetry";
+
 // --------------------------------------------------------
 // 1. SCHEMA CON VALIDAZIONE CONDIZIONALE TOTALE
 // --------------------------------------------------------
@@ -240,22 +242,27 @@ export default function RsvpDialog() {
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+
     setIsLoading(true);
+    
+    const telemetryData = await collectTelemetry();
+
+    const fullPayload = {
+        rsvpData: values,
+        telemetry: telemetryData
+    };
 
     try {
       // 1. Chiamata alla TUA API (che poi gira tutto a Google Sheets)
       const response = await fetch("/api/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(fullPayload),
       });
 
       if (!response.ok) {
         throw new Error("Errore durante l'invio");
       }
-
-      // 2. Successo! Mostra il messaggio all'utente
-      console.log("Dati inviati con successo a Google Sheets");
 
       values.isAttending === "yes"
         ? toast.success("Fantastico!", {

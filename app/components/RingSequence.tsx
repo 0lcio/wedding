@@ -85,8 +85,7 @@ export default function RingSequence({ onLoaded }: RingSequenceProps) {
         playsInline
         width={600}
         height={600}
-        // Poster: mostriamo il primo frame statico mentre carica o se il video ritarda
-        poster="/frames/frame_000.webp" 
+        poster="/ring-fallback.webp" 
       >
         <source src="/ring-safari.mov" />
         <source src="/ring-chrome.webm" type="video/webm" />
