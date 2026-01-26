@@ -59,7 +59,7 @@ const formSchema = z.object({
   intolerances: z.string().optional(),
 
   hasFoodPreferences: z.boolean().optional(),
-  foodPreferenceType: z.enum(["vegetarian", "vegan", "other"]).optional(),
+  foodPreferenceType: z.enum(["Vegetariano", "Vegano", "Altro"]).optional(),
 
   needsHotel: z.boolean().optional(),
   notes: z.string().optional(),
@@ -241,22 +241,45 @@ export default function RsvpDialog() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Dati inviati:", values);
 
-    values.isAttending === "yes"
-      ? toast.success("Fantastico!", {
-          description: "Controlla la tua mail per la conferma!",
-          position: "bottom-center",
-        })
-      : toast.info("Ci dispiace!", {
-          description: "Grazie comunque per averci avvisato!",
-          position: "bottom-center",
-        });
+    try {
+      // 1. Chiamata alla TUA API (che poi gira tutto a Google Sheets)
+      const response = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
 
-    setIsLoading(false);
-    setOpen(false);
-    form.reset();
+      if (!response.ok) {
+        throw new Error("Errore durante l'invio");
+      }
+
+      // 2. Successo! Mostra il messaggio all'utente
+      console.log("Dati inviati con successo a Google Sheets");
+
+      values.isAttending === "yes"
+        ? toast.success("Fantastico!", {
+            description: "La tua presenza è stata registrata!",
+            position: "bottom-center",
+          })
+        : toast.info("Ci dispiace!", {
+            description: "Grazie comunque per averci avvisato!",
+            position: "bottom-center",
+          });
+
+      // 3. Chiudi e pulisci il form
+      setOpen(false);
+      form.reset();
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Errore di connessione", {
+        description: "Non siamo riusciti a salvare la risposta. Riprova.",
+        position: "bottom-center",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -273,6 +296,7 @@ export default function RsvpDialog() {
           onInteractOutside={(e) => {
             if (isDirty) e.preventDefault();
           }}
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl text-stone-900 uppercase tracking-widest">
@@ -294,7 +318,7 @@ export default function RsvpDialog() {
                     <FormItem>
                       <FormLabel className="text-stone-800">Nome</FormLabel>
                       <FormControl>
-                        <Input placeholder="Mario" {...field} className="bg-white" />
+                        <Input placeholder="Mario" {...field} className="bg-white capitalize" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -307,7 +331,7 @@ export default function RsvpDialog() {
                     <FormItem>
                       <FormLabel className="text-stone-800">Cognome</FormLabel>
                       <FormControl>
-                        <Input placeholder="Rossi" {...field} className="bg-white" />
+                        <Input placeholder="Rossi" {...field} className="bg-white capitalize" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -383,7 +407,7 @@ export default function RsvpDialog() {
                     render={({ field }) => (
                       <FormItem>
                          <ToggleSection 
-                            label="Hai accompagnatori?"
+                            label="Sarai accompagnato?"
                             description="Amici o familiari che verranno con te"
                             value={field.value} 
                             onChange={field.onChange}
@@ -431,7 +455,7 @@ export default function RsvpDialog() {
                                 <FormItem>
                                   <FormControl>
                                     <Textarea 
-                                      placeholder="Es. Celiachia, allergia alle noci..." 
+                                      placeholder="Es. allergia alle noci..." 
                                       className="bg-stone-50 border-stone-200 resize-none focus:bg-white transition-colors" 
                                       {...intolField}
                                     />
@@ -470,15 +494,15 @@ export default function RsvpDialog() {
                                       className="flex flex-col gap-3"
                                     >
                                       <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="vegetarian" id="veg" className="bg-stone-100" />
+                                        <RadioGroupItem value="Vegetariano" id="veg" className="bg-stone-100" />
                                         <label htmlFor="veg" className="text-sm font-medium text-stone-700 cursor-pointer">Vegetariano</label>
                                       </div>
                                       <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="vegan" id="vegan" className="bg-stone-100" />
+                                        <RadioGroupItem value="Vegano" id="vegan" className="bg-stone-100" />
                                         <label htmlFor="vegan" className="text-sm font-medium text-stone-700 cursor-pointer">Vegano</label>
                                       </div>
                                       <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="other" id="other" className="bg-stone-100" />
+                                        <RadioGroupItem value="Altro" id="other" className="bg-stone-100" />
                                         <label htmlFor="other" className="text-sm font-medium text-stone-700 cursor-pointer">
                                           Altro <span className="text-stone-400 text-xs font-normal ml-1 italic">"Dai, non esagerare..." -Ble</span>
                                         </label>
