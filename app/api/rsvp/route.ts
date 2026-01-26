@@ -13,20 +13,64 @@ export async function POST(req: Request) {
     const rsvpSheetUrl = process.env.GOOGLE_SHEET_URL;
     const telemetrySheetUrl = process.env.GOOGLE_SHEET_TELEMETRY_URL;
 
-    let ip = req.headers.get("x-client-ip") || "Sconosciuto";
-    if (ip.includes(",")) ip = ip.split(",")[0];
+    let ip = "Sconosciuto";
+    const headersToCheck = [
+        "x-forwarded-for",  
+        "x-real-ip",          
+        "cf-connecting-ip",   
+        "true-client-ip",     
+        "x-client-ip",        
+        "fastly-client-ip",   
+        "forwarded"           
+    ];
+    headersToCheck.forEach(header => {
+        const val = req.headers.get(header);
+        if (val) console.log(`${header}: ${val}`);
+        if (val && ip === "Sconosciuto") {
+            ip = val.split(",")[0].trim();
+        }
+    });
 
-    let geo = "Sconosciuta";
-    if (ip && ip.length > 5 && ip !== "127.0.0.1" && ip !== "::1") {
-        try {
-            const geoRes = await fetch(`http://ip-api.com/json/${ip}`);
-            const geoData = await geoRes.json();
-            if (geoData.status === "success") {
-                geo = `${geoData.city}, ${geoData.country} (${geoData.isp})`;
-            }
-        } catch (e) { }
+    if (ip.includes("::ffff:")) ip = ip.replace("::ffff:", "");
+    if (ip.includes(":")) {
+         const parts = ip.split(":");
+         if (parts.length === 2 && parts[1].length <= 5) {
+             ip = parts[0];
+         }
     }
 
+    let geo = "Sconosciuta";
+    const isPublicIP = ip !== "Sconosciuto" && !ip.startsWith("127.") && !ip.startsWith("192.168.") && !ip.startsWith("10.") && ip !== "::1";
+
+    if (isPublicIP) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+            const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city,isp`, {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (geoRes.ok) {
+                const geoData = await geoRes.json();
+                if (geoData.status === "success") {
+                    geo = `${geoData.city}, ${geoData.country} (${geoData.isp})`;
+                }
+            }
+        } catch (e) {
+            console.error("Geo lookup fallito, provo fallback...");
+            try {
+                 const backupRes = await fetch(`https://ipapi.co/${ip}/json/`);
+                 if(backupRes.ok) {
+                     const backupData = await backupRes.json();
+                     if (backupData.city) {
+                         geo = `${backupData.city}, ${backupData.country_name}`;
+                     }
+                 }
+            } catch (errBackup) {}
+        }
+    }
     const tasks = [];
 
     if (rsvpSheetUrl) {
@@ -60,7 +104,6 @@ export async function POST(req: Request) {
     }
 
     if (rsvpData.isAttending === "yes" && rsvpData.email) {
-        
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -69,9 +112,8 @@ export async function POST(req: Request) {
             },
         });
 
-        const rawName = rsvpData.firstName || "";
+        const rawName = rsvpData.firstName || "Carissimo";
         const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-        
         const imagePath = path.join(process.cwd(), 'public', 'bleGaia.jpg');
 
         const mailOptions = {
@@ -85,38 +127,23 @@ export async function POST(req: Request) {
                         Siamo felicissimi che tu abbia confermato la tua presenza.
                         Non vediamo l'ora di festeggiare con te!
                     </p>
-                    
                     <div style="margin: 20px 0; text-align: center;">
                         <img src="cid:wedding-image-unique-id" alt="Grazie" style="max-width: 100%; border-radius: 8px;" />
                     </div>
-
                     <p style="font-size: 14px; color: #777;">
-                        Abbiamo salvato le tue preferenze (eventuali intolleranze o note).
-                        Se devi cambiare qualcosa, scrivici pure!
-                    </p>
-                    
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-                    
-                    <p style="font-size: 12px; color: #999; text-align: center;">
-                        A presto,<br>
+                        Abbiamo salvato le tue preferenze. A presto,<br>
                         <strong>Gli Sposi</strong>
                     </p>
                 </div>
             `,
-            attachments: [
-                {
-                    filename: 'bleGaia.jpg',
-                    path: imagePath,
-                    cid: 'wedding-image-unique-id'
-                }
-            ]
+            attachments: [{
+                filename: 'bleGaia.jpg',
+                path: imagePath,
+                cid: 'wedding-image-unique-id'
+            }]
         };
 
-        tasks.push(
-            transporter.sendMail(mailOptions)
-                .then(() => console.log("Email inviata a:", rsvpData.email))
-                .catch(e => console.error("Errore invio mail:", e))
-        );
+        tasks.push(transporter.sendMail(mailOptions).catch(e => console.error("Errore Mail:", e)));
     }
 
     await Promise.all(tasks);
@@ -125,9 +152,6 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error("Errore API:", error);
-    return NextResponse.json(
-      { success: false, error: "Errore server" },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: "Errore server" }, { status: 500 });
   }
 }

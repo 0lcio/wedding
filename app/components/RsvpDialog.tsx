@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { collectTelemetry } from "@/lib/telemetry";
+import { PrivacyPolicy } from "./PrivacyPolicy";
 
 // --------------------------------------------------------
 // 1. SCHEMA CON VALIDAZIONE CONDIZIONALE TOTALE
@@ -244,7 +245,7 @@ export default function RsvpDialog() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
 
     setIsLoading(true);
-    
+
     const telemetryData = await collectTelemetry();
 
     const fullPayload = {
@@ -574,6 +575,9 @@ export default function RsvpDialog() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? "Invio in corso..." : "Conferma"}
               </Button>
+              <p className="text-[10px] text-center text-stone-400 px-4 leading-tight">
+              Cliccando su Conferma, accetti il trattamento dei dati personali come descritto nella nostra <PrivacyPolicy />.
+              </p>
             </form>
           </Form>
         </DialogContent>
