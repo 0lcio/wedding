@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import Image from "next/image"; // Importiamo Image per il fallback
+import Image from "next/image";
 
 interface RingSequenceProps {
   onLoaded?: () => void;
@@ -9,12 +9,12 @@ interface RingSequenceProps {
 
 export default function RingSequence({ onLoaded }: RingSequenceProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [useFallback, setUseFallback] = useState(false); // Stato per attivare la GIF/WebP
+  const [useFallback, setUseFallback] = useState(false);
+  const [isVideoVisible, setIsVideoVisible] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
-    
-    // Se siamo già in modalità fallback, non fare nulla col video
+
     if (useFallback) {
       if (onLoaded) onLoaded();
       return;
@@ -22,72 +22,65 @@ export default function RingSequence({ onLoaded }: RingSequenceProps) {
 
     if (!video) return;
 
-    // Funzione robusta per tentare il play
     const tryPlay = async () => {
       try {
-        // Proviamo a far partire il video
+        video.currentTime = 0;
         await video.play();
-        // Se arriviamo qui, il video sta andando -> Tutto ok
       } catch (err) {
-        console.log("Autoplay bloccato (Low Power Mode?), passo al fallback.", err);
-        // Se il browser blocca (errore), attiviamo il fallback
         setUseFallback(true);
-        // Notifichiamo comunque che è "carico" per non bloccare il sito
         if (onLoaded) onLoaded();
       }
     };
 
     tryPlay();
 
-    // Listener per quando il video è pronto (se non va in errore)
-    const handleCanPlay = () => {
-      if (onLoaded && !useFallback) onLoaded();
+    const handlePlaying = () => {
+      if (!useFallback) {
+        setIsVideoVisible(true);
+        if (onLoaded) onLoaded();
+      }
     };
 
-    video.addEventListener("canplaythrough", handleCanPlay);
-    
-    // Controllo cache
-    if (video.readyState >= 3 && !useFallback) {
-      if (onLoaded) onLoaded();
-    }
+    video.addEventListener("timeupdate", handlePlaying, { once: true });
 
     return () => {
-      video.removeEventListener("canplaythrough", handleCanPlay);
+      video.removeEventListener("timeupdate", handlePlaying);
     };
   }, [onLoaded, useFallback]);
 
-
-  // --- RENDER DEL FALLBACK (Animated WebP) ---
   if (useFallback) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <Image
-          src="/ring-fallback.webp" // Il file che hai creato con FFmpeg
+          src="/ring-fallback.webp"
           alt="Ring Animation"
           width={600}
           height={600}
           className="w-full h-full object-contain"
-          priority // Caricalo subito
-          unoptimized // Importante per le WebP animate su Next.js a volte
+          priority
+          unoptimized
         />
       </div>
     );
   }
 
-  // --- RENDER DEL VIDEO (Default) ---
+  // --- RENDER VIDEO (Default) ---
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center isolate">
       <video
         ref={videoRef}
-        className="w-full h-full object-contain hide-video-controls"
+        className={`w-full h-full object-contain pointer-events-none mix-blend-screen transition-opacity duration-500 ${
+          isVideoVisible ? "opacity-100" : "opacity-0"
+        }`}
         muted
         loop
         playsInline
+        preload="auto"
         width={600}
         height={600}
-        poster="/ring-fallback.webp" 
+        style={{ background: "transparent" }} 
       >
-        <source src="/ring-safari.mov" />
+        <source src="/ring-safari.mov" type='video/quicktime; codecs="hvc1"' />
         <source src="/ring-chrome.webm" type="video/webm" />
       </video>
     </div>

@@ -2,12 +2,41 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import path from "path";
 import process from "process";
+import { isEmailAllowed } from "@/lib/allowed-domains";
+import { rsvpSchema } from "@/lib/schemas";
+import { ratelimit } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
   try {
+
+    const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
+    
+    // Chiediamo a Upstash se questo IP può passare
+    const { success } = await ratelimit.limit(ip);
+
+    if (!success) {
+      return NextResponse.json(
+        { success: false, error: "Troppe richieste. Riprova tra un minuto." },
+        { status: 429 }
+      );
+    }
+
     const incomingData = await req.json();
 
-    const rsvpData = incomingData.rsvpData || {};
+    const parsed = rsvpSchema.safeParse(incomingData.rsvpData);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "Dati non validi", 
+          details: parsed.error.format() 
+        }, 
+        { status: 400 }
+      );
+    }
+
+    const rsvpData = parsed.data;
     const telemetryData = incomingData.telemetry || {};
 
     const rsvpSheetUrl = process.env.GOOGLE_SHEET_URL;
@@ -61,37 +90,38 @@ export async function POST(req: Request) {
     if (candidateIpForGeo && candidateIpForGeo !== "127.0.0.1") {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2500);
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-            const geoRes = await fetch(`http://ip-api.com/json/${candidateIpForGeo}?fields=status,country,city,isp`, {
-                signal: controller.signal
+            const geoRes = await fetch(`https://ipapi.co/${candidateIpForGeo}/json/`, {
+                signal: controller.signal,
+                headers: { 
+                    'User-Agent': 'Wedding-RSVP-App/1.0' 
+                }
             });
             clearTimeout(timeoutId);
 
             if (geoRes.ok) {
                 const geoData = await geoRes.json();
-                if (geoData.status === "success") {
-                    geo = `${geoData.city}, ${geoData.country} (${geoData.isp})`;
+                if (geoData.city) {
+                    geo = `${geoData.city}, ${geoData.country_name}`;
+                    if (geoData.org) geo += ` (${geoData.org})`;
                 }
             }
         } catch (e) {
-             try {
-                 const backupRes = await fetch(`https://ipapi.co/${candidateIpForGeo}/json/`);
-                 if(backupRes.ok) {
-                     const backupData = await backupRes.json();
-                     if (backupData.city) {
-                         geo = `${backupData.city}, ${backupData.country_name}`;
-                     }
-                 }
-            } catch (errBackup) {}
         }
     }
 
     const tasks = [];
+    
+    let finalNotes = rsvpData.notes || "";
+    if (rsvpData.isAttending === "maybe" && rsvpData.maybeReason) {
+        finalNotes = `MOTIVO FORSE: ${rsvpData.maybeReason} ${finalNotes}`;
+    }
 
     if (rsvpSheetUrl) {
         const rsvpPayload = {
             ...rsvpData,
+            notes: finalNotes,
             deviceInfo: { ip: allIpsLog, city: geo } 
         };
         tasks.push(

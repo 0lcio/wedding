@@ -97,18 +97,19 @@ export default function Home() {
         duration: 1.5,
         ease: "power2.inOut",
     })
+    
     .to(bustaAperta1Ref.current, {
         autoAlpha: 1,
         duration: 1.5,
         ease: "power2.inOut",
     }, "<") 
-    
+    .set(busta3Ref.current, { display: "none" })
     // USCITA FOGLIO
     .to(paperRef.current, {
         y: 0, 
         autoAlpha: 1,
-        duration: 3.0, // Lento
-        ease: "power2.out", // Morbido
+        duration: 3.0, 
+        ease: "power2.out", 
     }, "-=0.5");
 
 
@@ -140,9 +141,7 @@ export default function Home() {
       {/* LOADER */}
       <div 
         ref={loaderRef}
-        // Aggiungi z-50 o z-[100] per essere sicuro che copra tutto e blocchi i click
         className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#EBE9E4] h-screen w-screen"
-        // Aggiungi touch-action: none per evitare scroll su mobile mentre carica
         style={{ touchAction: "none" }} 
       >
          <div className="flex flex-col items-center gap-4">

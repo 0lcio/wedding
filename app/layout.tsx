@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Amiri, Cormorant_Garamond, Montserrat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
+import { Signature } from "./components/Signature";
 
 const NameBride = process.env.NEXT_PUBLIC_NAME_BRIDE;
 const NameGroom = process.env.NEXT_PUBLIC_NAME_GROOM;
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className={`${serifFont.variable} ${garamondFont.variable} ${sansFont.variable} antialiased bg-[#f2f0e9]`}>
         {children}
         <Toaster richColors theme="light"/>
+        <Signature />
       </body>
     </html>
   );

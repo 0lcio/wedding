@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💍 Wedding RSVP WebApp
 
-## Getting Started
+A modern, secure, and fully responsive RSVP application built for my brother's wedding.
+Designed to handle guest confirmations, food intolerances, and logistics with a focus on privacy and security.
 
-First, run the development server:
+## 🚀 Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS + Shadcn/ui
+- **Validation:** Zod (Server-side & Client-side)
+- **Database/Storage:** Appwrite & Google Sheets API
+- **Security:** Upstash (Rate Limiting) & IP Geolocation (HTTPS)
+- **Emails:** Nodemailer (Gmail SMTP)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Secure RSVP Form:** Prevents spam and invalid data entry.
+- **Real-time Sync:** Guest responses are saved to Google Sheets for easy management.
+- **Smart Validation:** Checks for valid emails and incomplete fields.
+- **Telemetry & Security:** Logs technical data (IP, rough location) to prevent abuse (GDPR compliant).
+- **Responsive Design:** Optimized for mobile and desktop users.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Installation (For Educational Use)
 
-## Learn More
+To run this project locally for study purposes:
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clone the repo**
+   ```bash
+   git clone [https://github.com/0lcio/wedding.git](https://github.com/0lcio/wedding.git)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Install dependencies**
+   ```bash
+   npm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Run the development server**
+   ```bash
+   npm run dev
 
-## Deploy on Vercel
+## ⚖️ License & Copyright
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**© 2025 Gaia & Bledar - All Rights Reserved.**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is intended **solely for the personal use** of the couple and their wedding guests.
+
+* ❌ **You may NOT** use this code, design, or layout for your own wedding or client projects.
+* ❌ **You may NOT** sell, redistribute, or re-upload this repository.
+* ✅ **You MAY** read the code for educational purposes or inspiration.
+
+Unauthorized copying, modification, or distribution of this software or its assets is strictly prohibited.
