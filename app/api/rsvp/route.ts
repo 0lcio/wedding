@@ -8,10 +8,8 @@ import { ratelimit } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
   try {
-
-    const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
     
-    // Chiediamo a Upstash se questo IP può passare
+    const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
     const { success } = await ratelimit.limit(ip);
 
     if (!success) {
@@ -21,8 +19,8 @@ export async function POST(req: Request) {
       );
     }
 
+    // 2. RECUPERO E VALIDAZIONE DATI
     const incomingData = await req.json();
-
     const parsed = rsvpSchema.safeParse(incomingData.rsvpData);
 
     if (!parsed.success) {
@@ -37,92 +35,22 @@ export async function POST(req: Request) {
     }
 
     const rsvpData = parsed.data;
-    const telemetryData = incomingData.telemetry || {};
-
     const rsvpSheetUrl = process.env.GOOGLE_SHEET_URL;
-    const telemetrySheetUrl = process.env.GOOGLE_SHEET_TELEMETRY_URL;
 
-    const headersToCheck = [
-        "x-forwarded-for",
-        "x-real-ip",
-        "cf-connecting-ip",
-        "true-client-ip",
-        "x-client-ip",
-        "forwarded",
-        "x-cluster-client-ip",
-        "fastly-client-ip"
-    ];
-
-    let allIpsLog = ""; 
-    let candidateIpForGeo: string | undefined = undefined; 
-
-    headersToCheck.forEach(header => {
-        const val = req.headers.get(header);
-        if (val) {
-            allIpsLog += `${header}: ${val} || `;
-        }
-    });
-
-    if (!allIpsLog) allIpsLog = "Nessun Header IP trovato (probabile localhost o proxy nascosto)";
-
-    const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
-    const foundIps = allIpsLog.match(ipRegex) || [];
-
-    for (const ip of foundIps) {
-        if (!ip.startsWith("10.") && 
-            !ip.startsWith("192.168.") && 
-            !ip.startsWith("127.") && 
-            !ip.startsWith("172.")) {
-            candidateIpForGeo = ip;
-            break; 
-        }
-    }
-
-    if (!candidateIpForGeo && foundIps.length > 0) {
-        const firstIp = foundIps[0];
-        if (firstIp) {
-            candidateIpForGeo = firstIp;
-        }
-    }
-
-    let geo = "Sconosciuta";
-    
-    if (candidateIpForGeo && candidateIpForGeo !== "127.0.0.1") {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-            const geoRes = await fetch(`https://ipapi.co/${candidateIpForGeo}/json/`, {
-                signal: controller.signal,
-                headers: { 
-                    'User-Agent': 'Wedding-RSVP-App/1.0' 
-                }
-            });
-            clearTimeout(timeoutId);
-
-            if (geoRes.ok) {
-                const geoData = await geoRes.json();
-                if (geoData.city) {
-                    geo = `${geoData.city}, ${geoData.country_name}`;
-                    if (geoData.org) geo += ` (${geoData.org})`;
-                }
-            }
-        } catch (e) {
-        }
-    }
-
-    const tasks = [];
-    
+    // Gestione note condizionali (motivo "Forse")
     let finalNotes = rsvpData.notes || "";
     if (rsvpData.isAttending === "maybe" && rsvpData.maybeReason) {
         finalNotes = `MOTIVO FORSE: ${rsvpData.maybeReason} ${finalNotes}`;
     }
 
+    const tasks = [];
+
+    // 3. SALVATAGGIO SU GOOGLE SHEET (Solo dati essenziali)
     if (rsvpSheetUrl) {
         const rsvpPayload = {
             ...rsvpData,
             notes: finalNotes,
-            deviceInfo: { ip: allIpsLog, city: geo } 
+            // Rimosso deviceInfo/IP/Geo per privacy
         };
         tasks.push(
             fetch(rsvpSheetUrl, {
@@ -133,22 +61,7 @@ export async function POST(req: Request) {
         );
     }
 
-    if (telemetrySheetUrl) {
-        const telemetryPayload = {
-            rsvpData: rsvpData,
-            telemetry: telemetryData,
-            ip: allIpsLog,
-            geo: geo
-        };
-        tasks.push(
-            fetch(telemetrySheetUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(telemetryPayload),
-            }).catch(e => console.error("Err Telemetry Sheet:", e))
-        );
-    }
-
+    // 4. INVIO EMAIL DI CONFERMA (Solo se partecipa)
     if (rsvpData.isAttending === "yes" && rsvpData.email) {
         const transporter = nodemailer.createTransport({
             service: "gmail",

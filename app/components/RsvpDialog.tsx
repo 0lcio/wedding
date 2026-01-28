@@ -41,11 +41,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { collectTelemetry } from "@/lib/telemetry";
 import { PrivacyPolicy } from "./PrivacyPolicy";
 import { isEmailAllowed } from "@/lib/allowed-domains";
 import { rsvpSchema, RsvpSchemaType } from "@/lib/schemas";
-
 
 const ToggleSection = ({
   label,
@@ -174,7 +172,7 @@ export default function RsvpDialog() {
 
   async function onSubmit(values: RsvpSchemaType) {
     setIsLoading(true);
-    const telemetryData = await collectTelemetry();
+
     console.log("dati raccolti:", values);
     if (values.isAttending === "yes" && values.hasGuests === false) {
       values.guests = "NO";
@@ -188,7 +186,6 @@ export default function RsvpDialog() {
     console.log("dati finali da inviare:", values);
     const fullPayload = {
       rsvpData: values,
-      telemetry: telemetryData,
     };
     console.log("payload completo:", fullPayload);
     try {
@@ -202,21 +199,21 @@ export default function RsvpDialog() {
         throw new Error("Errore durante l'invio");
       }
 
-     if(values.isAttending === "yes") {
+      if (values.isAttending === "yes") {
         toast.success("Fantastico!", {
-            description: "La tua presenza è stata registrata!",
-            position: "bottom-center",
-          })
-      } else if(values.isAttending === "no") {
+          description: "La tua presenza è stata registrata!",
+          position: "bottom-center",
+        });
+      } else if (values.isAttending === "no") {
         toast.info("Ci dispiace!", {
-            description: "Grazie comunque per averci avvisato!",
-            position: "bottom-center",
-          });
+          description: "Grazie comunque per averci avvisato!",
+          position: "bottom-center",
+        });
       } else {
         toast.info("Ricevuto!", {
-            description: "Ti aspettiamo per una tua conferma definitiva.",
-            position: "bottom-center",
-          });
+          description: "Ti aspettiamo per una tua conferma definitiva.",
+          position: "bottom-center",
+        });
       }
 
       setOpen(false);
@@ -314,7 +311,7 @@ export default function RsvpDialog() {
                         {/* Opzione SI */}
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
-                            <RadioGroupItem value="yes" className="bg-white"/>
+                            <RadioGroupItem value="yes" className="bg-white" />
                           </FormControl>
                           <FormLabel className="font-normal">
                             Sì, non mancherei per nulla al mondo! 💍
@@ -324,7 +321,7 @@ export default function RsvpDialog() {
                         {/* Opzione NO */}
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
-                            <RadioGroupItem value="no" className="bg-white"/>
+                            <RadioGroupItem value="no" className="bg-white" />
                           </FormControl>
                           <FormLabel className="font-normal">
                             No, purtroppo non riuscirò ad esserci 😢
@@ -334,7 +331,10 @@ export default function RsvpDialog() {
                         {/* --- NUOVA OPZIONE FORSE --- */}
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
-                            <RadioGroupItem value="maybe" className="bg-white"/>
+                            <RadioGroupItem
+                              value="maybe"
+                              className="bg-white"
+                            />
                           </FormControl>
                           <FormLabel className="font-normal">
                             Forse, devo ancora confermare ⏳
@@ -591,28 +591,29 @@ export default function RsvpDialog() {
               )}
 
               <FormField
-  control={form.control}
-  name="privacyAccepted"
-  render={({ field }) => (
-    <FormItem className="flex flex-row items-start space-x-2 space-y-0 mb-1 pt-3 px-1">
-      <FormControl>
-        <input
-          type="checkbox"
-          checked={field.value}
-          onChange={field.onChange}
-          className="mt-[2px] h-3.5 w-3.5 shrink-0 rounded-[2px] border border-stone-300 bg-white text-stone-800 focus:ring-1 focus:ring-stone-400 focus:ring-offset-1 cursor-pointer accent-stone-700"
-        />
-      </FormControl>
-      <div className="space-y-0 leading-none">
-        <FormLabel className="text-[10px] text-stone-400 font-normal leading-tight cursor-pointer hover:text-stone-600 transition-colors inline">
-          Ho letto e accetto la <PrivacyPolicy />. Acconsento al trattamento dei dati, 
-          inclusi quelli particolari (allergie/intolleranze), secondo l'informativa.
-        </FormLabel>
-        <FormMessage className="text-[10px]" />
-      </div>
-    </FormItem>
-  )}
-/>
+                control={form.control}
+                name="privacyAccepted"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-2 space-y-0 mb-1 pt-3 px-1">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="mt-[2px] h-3.5 w-3.5 shrink-0 rounded-[2px] border border-stone-300 bg-white text-stone-800 focus:ring-1 focus:ring-stone-400 focus:ring-offset-1 cursor-pointer accent-stone-700"
+                      />
+                    </FormControl>
+                    <div className="space-y-0 leading-none">
+                      <FormLabel className="text-[10px] text-stone-400 font-normal leading-tight cursor-pointer hover:text-stone-600 transition-colors inline">
+                        Ho letto e accetto la <PrivacyPolicy />. Acconsento al
+                        trattamento dei dati, inclusi quelli particolari
+                        (allergie/intolleranze), secondo l'informativa.
+                      </FormLabel>
+                      <FormMessage className="text-[10px]" />
+                    </div>
+                  </FormItem>
+                )}
+              />
 
               <Button
                 type="submit"

@@ -36,8 +36,7 @@ export function PrivacyPolicy() {
               
               <p className="mt-2 font-semibold">Dati tecnici e di sicurezza:</p>
               <p>
-                Per garantire la sicurezza del sito e prevenire spam o attacchi informatici, il sistema raccoglie automaticamente dati tecnici come: 
-                indirizzo IP, tipo di browser, provider internet (ISP) e posizione approssimativa (città/paese).
+                Per garantire la sicurezza del sito e prevenire spam o attacchi informatici, il sistema processa temporaneamente dati tecnici come l'indirizzo IP e il tipo di browser.
               </p>
             </section>
 
@@ -45,7 +44,7 @@ export function PrivacyPolicy() {
               <h3 className="font-bold text-stone-800 mb-1">3. Finalità e Base Giuridica</h3>
               <ul className="list-disc pl-4 space-y-1">
                 <li>
-                  <strong>Gestione Evento:</strong> Organizzare il catering e i posti (Base giuridica: Esecuzione di misure pre-contrattuali/Consenso).
+                  <strong>Gestione Evento:</strong> Organizzare il catering e i posti. Il trattamento delle preferenze alimentari (intolleranze/allergie) avviene sulla base del tuo <strong>Consenso esplicito</strong>.
                 </li>
                 <li>
                   <strong>Sicurezza:</strong> Proteggere il modulo da bot e accessi non autorizzati (Base giuridica: Legittimo Interesse del titolare).
@@ -56,7 +55,7 @@ export function PrivacyPolicy() {
             <section>
               <h3 className="font-bold text-stone-800 mb-1">4. Condivisione dei dati</h3>
               <p>
-                I tuoi dati sono salvati su servizi cloud sicuri (Google Sheets, Appwrite) e non verranno mai ceduti a terzi per marketing.
+                I tuoi dati sono salvati su servizi cloud sicuri (Google Cloud/Drive, Upstash, Gmail) e non verranno mai ceduti a terzi per marketing.
               </p>
             </section>
             
