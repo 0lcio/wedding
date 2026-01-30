@@ -351,7 +351,7 @@ export default function RsvpDialog() {
                             />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Forse, devo ancora confermare. ⏳
+                            Vorrei tanto, ma attendo conferma (turni/ferie/salute) ⏳
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>
