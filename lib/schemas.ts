@@ -1,4 +1,3 @@
-// FILE: lib/schemas.ts
 import * as z from "zod";
 import { isEmailAllowed } from "@/lib/allowed-domains";
 
@@ -6,13 +5,18 @@ export const rsvpSchema = z
   .object({
     firstName: z.string().min(2, "Il nome è obbligatorio"),
     lastName: z.string().min(2, "Il cognome è obbligatorio"),
-    email: z.string().optional(),
+    
+    email: z.string()
+      .min(1, "L'email è obbligatoria")
+      .email("Inserisci un'email valida")
+      .refine((val) => isEmailAllowed(val), {
+        message: "Inserisci un'email valida",
+      }),
 
-    isAttending: z.enum(["yes", "no", "maybe"]),
+    isAttending: z.enum(["yes", "no", "maybe"], {
+    }),
+    
     maybeReason: z.string().optional(),
-
-    hasGuests: z.boolean().optional(),
-    guests: z.string().optional(),
 
     hasIntolerances: z.boolean().optional(),
     intolerances: z.string().optional(),
@@ -24,7 +28,7 @@ export const rsvpSchema = z
 
     needsHotel: z.boolean().optional(),
     notes: z.string().optional(),
-    privacyAccepted: z.literal(true, {
+    privacyAccepted: z.boolean().refine((val) => val === true, {
       message: "Devi accettare l'informativa per confermare.",
     }),
   })
@@ -32,36 +36,6 @@ export const rsvpSchema = z
 
     if (data.isAttending !== "yes") return;
 
-    if (
-      !data.email ||
-      !z.string().email().safeParse(data.email).success ||
-      !isEmailAllowed(data.email)
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Inserisci un'email valida",
-        path: ["email"],
-      });
-    }
-
-    // --- 2. VALIDAZIONE OSPITI ---
-    if (data.hasGuests === undefined) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Seleziona Sì o No",
-        path: ["hasGuests"],
-      });
-    } else if (data.hasGuests === true) {
-      if (!data.guests || data.guests.trim().length < 2) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Inserisci i nomi degli accompagnatori",
-          path: ["guests"],
-        });
-      }
-    }
-
-    // --- 3. VALIDAZIONE INTOLLERANZE ---
     if (data.hasIntolerances === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -78,7 +52,6 @@ export const rsvpSchema = z
       }
     }
 
-    // --- 4. VALIDAZIONE CIBO ---
     if (data.hasFoodPreferences === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -94,8 +67,7 @@ export const rsvpSchema = z
         });
       }
     }
-
-    // --- 5. VALIDAZIONE HOTEL ---
+    
     if (data.needsHotel === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

@@ -135,19 +135,16 @@ export default function RsvpDialog() {
       lastName: "",
       email: "",
       isAttending: undefined,
-      hasGuests: undefined,
-      guests: "",
       hasIntolerances: undefined,
       intolerances: "",
       foodPreferenceType: undefined,
       needsHotel: undefined,
       notes: "",
-      privacyAccepted: true,
+      privacyAccepted: false,
     },
   });
 
   const isAttending = form.watch("isAttending");
-  const hasGuests = form.watch("hasGuests");
   const hasIntolerances = form.watch("hasIntolerances");
   const hasFoodPreferences = form.watch("hasFoodPreferences");
   const { isDirty } = form.formState;
@@ -174,9 +171,6 @@ export default function RsvpDialog() {
     setIsLoading(true);
 
     console.log("dati raccolti:", values);
-    if (values.isAttending === "yes" && values.hasGuests === false) {
-      values.guests = "NO";
-    }
     if (values.isAttending === "yes" && values.hasIntolerances === false) {
       values.intolerances = "NO";
     }
@@ -233,7 +227,7 @@ export default function RsvpDialog() {
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <button className="mt-8 px-6 py-2 border border-stone-800 text-stone-800 font-sans text-[11px] tracking-widest uppercase hover:bg-stone-800 hover:text-white transition-colors">
+          <button className="mt-8 px-6 py-2 border border-stone-800 text-stone-800 font-sans text-[11px] tracking-widest uppercase hover:bg-stone-800 hover:text-white transition-colors ">
             Sarai presente?
           </button>
         </DialogTrigger>
@@ -298,17 +292,41 @@ export default function RsvpDialog() {
 
               <FormField
                 control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-stone-800">Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="mario.rossi@email.com"
+                        {...field}
+                        className="bg-white"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-[10px] text-stone-500">
+                      Ti invieremo qui la conferma di ricezione.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* --- SELEZIONE PRESENZA --- */}
+              <FormField
+                control={form.control}
                 name="isAttending"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
                     <FormLabel>Sarai dei nostri?</FormLabel>
                     <FormControl>
+                      {/* ... (Il resto del RadioGroup rimane uguale) ... */}
                       <RadioGroup
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                         className="flex flex-col space-y-1"
                       >
-                        {/* Opzione SI */}
+                        {/* ... Opzioni Sì, No, Forse ... */}
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="yes" className="bg-white" />
@@ -317,18 +335,14 @@ export default function RsvpDialog() {
                             Sì, non mancherei per nulla al mondo! 💍
                           </FormLabel>
                         </FormItem>
-
-                        {/* Opzione NO */}
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="no" className="bg-white" />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            No, purtroppo non riuscirò ad esserci 😢
+                            No, purtroppo non riuscirò ad esserci... 😢
                           </FormLabel>
                         </FormItem>
-
-                        {/* --- NUOVA OPZIONE FORSE --- */}
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
                             <RadioGroupItem
@@ -337,7 +351,7 @@ export default function RsvpDialog() {
                             />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Forse, devo ancora confermare ⏳
+                            Forse, devo ancora confermare. ⏳
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>
@@ -346,7 +360,6 @@ export default function RsvpDialog() {
                   </FormItem>
                 )}
               />
-
               {/* --- TEXTBOX CONDIZIONALE PER "FORSE" --- */}
               {isAttending === "maybe" && (
                 <div className="ml-6 mt-2 animate-in fade-in slide-in-from-top-2">
@@ -374,59 +387,26 @@ export default function RsvpDialog() {
 
               {isAttending === "yes" && (
                 <div className="space-y-4 border-t border-stone-300 pt-4 animate-in fade-in slide-in-from-top-2">
-                  {/* --- EMAIL --- */}
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-stone-800">Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="mario.rossi@email.com"
-                            {...field}
-                            className="bg-white"
-                          />
-                        </FormControl>
-                        <FormDescription className="text-[10px] text-stone-500">
-                          Ti invieremo qui la conferma della prenotazione.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  {/* --- ACCOMPAGNATORI --- */}
+                  {/* --- PERNOTTAMENTO --- */}
                   <FormField
                     control={form.control}
-                    name="hasGuests"
+                    name="needsHotel"
                     render={({ field }) => (
                       <FormItem>
                         <ToggleSection
-                          label="Sarai accompagnato?"
-                          description="Amici o familiari che verranno con te"
+                          label="Pernottamento"
+                          description={
+                            <>
+                              Festeggiamo fino a tardi! 🕺🥂💃
+                              <br />
+                              L'hotel è già pagato, vi fermate a dormire?
+                            </>
+                          }
                           value={field.value}
                           onChange={field.onChange}
-                          error={!!form.formState.errors.hasGuests}
-                        >
-                          <FormField
-                            control={form.control}
-                            name="guests"
-                            render={({ field: guestField }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Textarea
-                                    placeholder="Inserisci i nomi dei tuoi accompagnatori"
-                                    className="bg-stone-50 border-stone-200 resize-none focus:bg-white transition-colors"
-                                    {...guestField}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </ToggleSection>
+                          error={!!form.formState.errors.needsHotel}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -538,30 +518,6 @@ export default function RsvpDialog() {
                             )}
                           />
                         </ToggleSection>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* --- PERNOTTAMENTO --- */}
-                  <FormField
-                    control={form.control}
-                    name="needsHotel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <ToggleSection
-                          label="Pernottamento"
-                          description={
-                            <>
-                              Festeggiamo fino a tardi! 🕺🥂💃
-                              <br />
-                              L'hotel è già pagato, vi fermate a dormire?
-                            </>
-                          }
-                          value={field.value}
-                          onChange={field.onChange}
-                          error={!!form.formState.errors.needsHotel}
-                        />
                         <FormMessage />
                       </FormItem>
                     )}

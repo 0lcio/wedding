@@ -10,15 +10,15 @@ Designed to handle guest confirmations, food intolerances, and logistics with a 
 - **Styling:** Tailwind CSS + Shadcn/ui
 - **Validation:** Zod (Server-side & Client-side)
 - **Database/Storage:** Appwrite & Google Sheets API
-- **Security:** Upstash (Rate Limiting) & IP Geolocation (HTTPS)
+- **Security:** Upstash (Rate Limiting)
 - **Emails:** Nodemailer (Gmail SMTP)
 
 ## ✨ Features
 
 - **Secure RSVP Form:** Prevents spam and invalid data entry.
-- **Real-time Sync:** Guest responses are saved to Google Sheets for easy management.
+- **Real-time Sync:** Guest responses are saved to Google Cloud/Drive for easy management.
 - **Smart Validation:** Checks for valid emails and incomplete fields.
-- **Telemetry & Security:** Logs technical data (IP, rough location) to prevent abuse (GDPR compliant).
+- **Telemetry & Security:** Logs technical data (IP etc...) to prevent abuse (GDPR compliant).
 - **Responsive Design:** Optimized for mobile and desktop users.
 
 ## 🛠️ Installation (For Educational Use)
@@ -27,7 +27,7 @@ To run this project locally for study purposes:
 
 1. **Clone the repo**
    ```bash
-   git clone [https://github.com/0lcio/wedding.git](https://github.com/0lcio/wedding.git)
+   git clone https://github.com/0lcio/wedding.git
 
 2. **Install dependencies**
    ```bash
@@ -39,7 +39,7 @@ To run this project locally for study purposes:
 
 ## ⚖️ License & Copyright
 
-**© 2025 Gaia & Bledar - All Rights Reserved.**
+**© 2026 Gaia & Bledar - All Rights Reserved.**
 
 This project is intended **solely for the personal use** of the couple and their wedding guests.
 
