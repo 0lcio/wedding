@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { Resend } from "resend"; 
 import process from "process";
 import { rsvpSchema } from "@/lib/schemas";
 import { ratelimit } from "@/lib/ratelimit";
 
+// Inizializza Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
@@ -23,7 +24,11 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "Dati non validi", details: parsed.error.format() },
+        { 
+          success: false, 
+          error: "Dati non validi", 
+          details: parsed.error.format() 
+        }, 
         { status: 400 }
       );
     }
@@ -36,10 +41,13 @@ export async function POST(req: Request) {
         finalNotes = `MOTIVO FORSE: ${rsvpData.maybeReason} — ${finalNotes}`;
     }
 
-    const tasks: Promise<any>[] = [];
+    const tasks = [];
 
     if (rsvpSheetUrl) {
-        const rsvpPayload = { ...rsvpData, notes: finalNotes };
+        const rsvpPayload = {
+            ...rsvpData,
+            notes: finalNotes,
+        };
         tasks.push(
             fetch(rsvpSheetUrl, {
                 method: "POST",
@@ -49,23 +57,6 @@ export async function POST(req: Request) {
         );
     }
 
-    let imageBuffer: Buffer | null = null;
-    
-    if (rsvpData.email && rsvpData.isAttending === "yes") {
-        try {
-            const imageUrl = "https://gaiasposabledar.me/bleGaia.jpg"; 
-            const response = await fetch(imageUrl);
-            if (response.ok) {
-                const arrayBuffer = await response.arrayBuffer();
-                imageBuffer = Buffer.from(arrayBuffer);
-            } else {
-                console.error("Impossibile scaricare immagine:", response.statusText);
-            }
-        } catch (e) {
-            console.error("Errore fetch immagine:", e);
-        }
-    }
-
     if (rsvpData.email) {
         
         const rawName = rsvpData.firstName || "Carissimo";
@@ -73,23 +64,13 @@ export async function POST(req: Request) {
         
         let subject = "";
         let htmlBody = "";
-        let attachments = [];
+        
+        const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://gaiasposabledar.me"; 
+        
+        const imageUrl = "https://raw.githubusercontent.com/0lcio/wedding/master/public/bleGaia.jpg";
 
         if (rsvpData.isAttending === "yes") {
             subject = "Conferma Ricevuta! 🎉 Ci vediamo al matrimonio!";
-            
-            const imgTag = imageBuffer 
-                ? `<img src="cid:wedding-image-unique-id" alt="Grazie" style="max-width: 100%; border-radius: 8px;" />`
-                : `<p>(Immagine non caricata)</p>`; 
-
-            if (imageBuffer) {
-                attachments.push({
-                    filename: 'bleGaia.jpg',
-                    content: imageBuffer,
-                    content_id: 'wedding-image-unique-id', 
-                });
-            }
-
             htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName}!</h2>
@@ -98,7 +79,7 @@ export async function POST(req: Request) {
                         Non vediamo l'ora di festeggiare con te!
                     </p>
                     <div style="margin: 20px 0; text-align: center;">
-                        ${imgTag}
+                        <img src="${imageUrl}" alt="Grazie" style="max-width: 100%; border-radius: 8px;" />
                     </div>
                     <p style="font-size: 14px; color: #777;">
                         Abbiamo salvato le tue preferenze. A presto,<br>
@@ -113,40 +94,48 @@ export async function POST(req: Request) {
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName},</h2>
                     <p style="font-size: 16px; color: #555;">
-                        Grazie per averci risposto.<br>Ci dispiace molto che non potrai essere dei nostri, ma capiamo perfettamente.
+                        Grazie per averci risposto.<br>Ci dispiace molto che non potrai essere dei nostri nel nostro giorno speciale, 
+                        ma capiamo perfettamente e ti ringraziamo per avercelo comunicato.
                     </p>
                     <p style="font-size: 14px; color: #777; margin-top: 30px;">
-                        Un caro saluto,<br><strong>Gaia & Bledar</strong>
+                        Un caro saluto,<br>
+                        <strong>Gaia & Bledar</strong>
                     </p>
                 </div>
             `;
+
         } else {
             subject = "Grazie per la risposta (In attesa di conferma)";
             htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName},</h2>
                     <p style="font-size: 16px; color: #555;">
-                        Abbiamo ricevuto la tua risposta temporanea ("Forse").<br>
-                        Facci sapere appena puoi!
+                        Abbiamo ricevuto la tua risposta temporanea ("Forse").
+                    </p>
+                    <p style="font-size: 16px; color: #555;">
+                        Non preoccuparti, sappiamo che a volte è difficile organizzarsi con largo anticipo.<br>
+                        Ti chiediamo gentilmente di farci sapere una risposta definitiva appena ti sarà possibile, <br>
+                        così da aiutarci con l'organizzazione.
                     </p>
                     <p style="font-size: 14px; color: #777; margin-top: 30px;">
-                        A presto,<br><strong>Gaia & Bledar</strong>
+                        A presto,<br>
+                        <strong>Gaia & Bledar</strong>
                     </p>
                 </div>
             `;
         }
 
         const fromEmail = "Gaia & Bledar <noreply@gaiasposabledar.me>";
+        
         const replyToEmail = process.env.GMAIL_USER || "wedding.gaiabledar@gmail.com";
 
         tasks.push(
             resend.emails.send({
                 from: fromEmail,
                 to: rsvpData.email,
-                replyTo: replyToEmail,
+                replyTo: replyToEmail, 
                 subject: subject,
                 html: htmlBody,
-                attachments: attachments, 
             }).catch(e => console.error("Errore Resend:", e))
         );
     }
