@@ -90,7 +90,7 @@ export async function POST(req: Request) {
 
         } else if (rsvpData.isAttending === "no") {
             subject = "Ci dispiace che non potrai esserci";
-            textBody = `Ciao ${firstName}!\n\nSiamo felicissimi che tu abbia confermato la tua presenza. Non vediamo l'ora di festeggiare con te!\n\nAbbiamo salvato le tue preferenze.\n\nA presto,\nGli Sposi`;
+            textBody = `Ci dispiace molto, ti ringraziamo per avercelo comunicato!\n\nA presto,\nGli Sposi`;
             htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName},</h2>
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
 
         } else {
             subject = "Grazie per la risposta (In attesa di conferma)";
-            textBody = `Ciao ${firstName}!\n\nSiamo felicissimi che tu abbia confermato la tua presenza. Non vediamo l'ora di festeggiare con te!\n\nAbbiamo salvato le tue preferenze.\n\nA presto,\nGli Sposi`;
+            textBody = `Abbiamo ricevuto la tua risposta temporanea ("Forse"), Non preoccuparti!\n\nA presto,\nGli Sposi`;
             htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName},</h2>
