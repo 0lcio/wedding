@@ -64,13 +64,13 @@ export async function POST(req: Request) {
         
         let subject = "";
         let htmlBody = "";
+        let textBody = "";
         
-        const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://gaiasposabledar.me"; 
-        
-        const imageUrl = "https://fra.cloud.appwrite.io/v1/storage/buckets/697e865f00358ad10b94/files/697e8679002ce12cfebc/view?project=69763b7d0036d77ced68";
+        const imageUrl = "https://gaiasposabledar.me/bleGaia.jpg";
 
         if (rsvpData.isAttending === "yes") {
             subject = "Conferma Ricevuta! 🎉 Ci vediamo al matrimonio!";
+            textBody = `Ciao ${firstName}!\n\nSiamo felicissimi che tu abbia confermato la tua presenza. Non vediamo l'ora di festeggiare con te!\n\nAbbiamo salvato le tue preferenze.\n\nA presto,\nGli Sposi`;
             htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName}!</h2>
@@ -90,6 +90,7 @@ export async function POST(req: Request) {
 
         } else if (rsvpData.isAttending === "no") {
             subject = "Ci dispiace che non potrai esserci";
+            textBody = `Ciao ${firstName}!\n\nSiamo felicissimi che tu abbia confermato la tua presenza. Non vediamo l'ora di festeggiare con te!\n\nAbbiamo salvato le tue preferenze.\n\nA presto,\nGli Sposi`;
             htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName},</h2>
@@ -106,6 +107,7 @@ export async function POST(req: Request) {
 
         } else {
             subject = "Grazie per la risposta (In attesa di conferma)";
+            textBody = `Ciao ${firstName}!\n\nSiamo felicissimi che tu abbia confermato la tua presenza. Non vediamo l'ora di festeggiare con te!\n\nAbbiamo salvato le tue preferenze.\n\nA presto,\nGli Sposi`;
             htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName},</h2>
@@ -133,9 +135,9 @@ export async function POST(req: Request) {
             resend.emails.send({
                 from: fromEmail,
                 to: rsvpData.email,
-                replyTo: replyToEmail, 
                 subject: subject,
                 html: htmlBody,
+                text: textBody,
             }).catch(e => console.error("Errore Resend:", e))
         );
     }
