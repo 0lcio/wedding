@@ -67,7 +67,7 @@ export async function POST(req: Request) {
         
         const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://gaiasposabledar.me"; 
         
-        const imageUrl = "https://raw.githubusercontent.com/0lcio/wedding/master/public/bleGaia.jpg";
+        const imageUrl = "https://fra.cloud.appwrite.io/v1/storage/buckets/697e865f00358ad10b94/files/697e8679002ce12cfebc/view?project=69763b7d0036d77ced68";
 
         if (rsvpData.isAttending === "yes") {
             subject = "Conferma Ricevuta! 🎉 Ci vediamo al matrimonio!";
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
                         Non vediamo l'ora di festeggiare con te!
                     </p>
                     <div style="margin: 20px 0; text-align: center;">
-                        <img src="${imageUrl}" alt="Grazie" style="max-width: 100%; border-radius: 8px;" />
+                        <img src="${imageUrl}" style="max-width: 100%; border-radius: 8px;" />
                     </div>
                     <p style="font-size: 14px; color: #777;">
                         Abbiamo salvato le tue preferenze. A presto,<br>
@@ -125,7 +125,7 @@ export async function POST(req: Request) {
             `;
         }
 
-        const fromEmail = "Gaia & Bledar <noreply@gaiasposabledar.me>";
+        const fromEmail = "Gaia & Bledar <wedding@gaiasposabledar.me>";
         
         const replyToEmail = process.env.GMAIL_USER || "wedding.gaiabledar@gmail.com";
 
