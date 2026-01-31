@@ -11,7 +11,7 @@ Designed to handle guest confirmations, food intolerances, and logistics with a 
 - **Validation:** Zod (Server-side & Client-side)
 - **Database/Storage:** Appwrite & Google Sheets API
 - **Security:** Upstash (Rate Limiting)
-- **Emails:** Nodemailer (Gmail SMTP)
+- **Emails:** Resend
 
 ## ✨ Features
 

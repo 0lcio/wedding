@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
-import path from "path";
+import { Resend } from "resend"; 
 import process from "process";
 import { rsvpSchema } from "@/lib/schemas";
 import { ratelimit } from "@/lib/ratelimit";
+
+// Inizializza Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
@@ -56,29 +58,24 @@ export async function POST(req: Request) {
     }
 
     if (rsvpData.email) {
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.GMAIL_USER,
-                pass: process.env.GMAIL_PASS,
-            },
-        });
-
+        
         const rawName = rsvpData.firstName || "Carissimo";
         const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
         
         let subject = "";
         let htmlBody = "";
-        let attachments: { filename: string; path: string; cid: string; }[] = [];
+        
+        // IMPORTANTE: Sostituisci questo con il tuo dominio reale (quello che hai configurato su Resend/Namecheap)
+        // Se sei in locale usa localhost, in produzione usa il tuo dominio vero.
+        // Esempio: "https://www.gaiabledar.com"
+        const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://gaiasposabledar.me"; 
+        
+        // Logica immagine: Costruiamo l'URL pubblico invece di allegare il file fisico
+        // Questo riduce drasticamente il rischio spam.
+        const imageUrl = `${siteUrl}/bleGaia.jpg`;
 
         if (rsvpData.isAttending === "yes") {
-            const imagePath = path.join(process.cwd(), 'public', 'bleGaia.jpg');
             subject = "Conferma Ricevuta! 🎉 Ci vediamo al matrimonio!";
-            attachments = [{
-                filename: 'bleGaia.jpg',
-                path: imagePath,
-                cid: 'wedding-image-unique-id'
-            }];
             htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                     <h2 style="color: #333;">Ciao ${firstName}!</h2>
@@ -87,7 +84,7 @@ export async function POST(req: Request) {
                         Non vediamo l'ora di festeggiare con te!
                     </p>
                     <div style="margin: 20px 0; text-align: center;">
-                        <img src="cid:wedding-image-unique-id" alt="Grazie" style="max-width: 100%; border-radius: 8px;" />
+                        <img src="${imageUrl}" alt="Grazie" style="max-width: 100%; border-radius: 8px;" />
                     </div>
                     <p style="font-size: 14px; color: #777;">
                         Abbiamo salvato le tue preferenze. A presto,<br>
@@ -133,15 +130,20 @@ export async function POST(req: Request) {
             `;
         }
 
-        const mailOptions = {
-            from: `"Gaia & Bledar" <${process.env.GMAIL_USER}>`,
-            to: rsvpData.email,
-            subject: subject,
-            html: htmlBody,
-            attachments: attachments
-        };
+        const fromEmail = "Gaia & Bledar <noreply@gaiasposabledar.me>";
+        
+        // Mettiamo la tua mail reale come Reply-To, così se rispondono, la mail arriva a te.
+        const replyToEmail = process.env.GMAIL_USER || "olcio87@gmail.com";
 
-        tasks.push(transporter.sendMail(mailOptions).catch(e => console.error("Errore Mail:", e)));
+        tasks.push(
+            resend.emails.send({
+                from: fromEmail,
+                to: rsvpData.email,
+                replyTo: replyToEmail, 
+                subject: subject,
+                html: htmlBody,
+            }).catch(e => console.error("Errore Resend:", e))
+        );
     }
 
     await Promise.all(tasks);
